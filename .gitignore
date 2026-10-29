@@ -1,0 +1,8 @@
+# dependency directories
+node_modules/
+
+# Next.js build / generate output
+dist/
+
+# dotenv environment variables file
+.env

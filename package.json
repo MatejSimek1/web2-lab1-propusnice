@@ -1,0 +1,21 @@
+{
+  "type": "module",
+  "scripts": {
+    "build": "npm run clean && tsc && npm run copy-views",
+    "clean": "shx rm -rf dist",
+    "copy-views": "shx cp -r src/views/ dist",
+    "start": "node dist/app.js"
+  },
+  "dependencies": {
+    "dotenv": "^18.0.5",
+    "express": "^5.2.1",
+    "express-openid-connect": "^3.4.0",
+    "pug": "^3.0.4"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "@types/express": "^5.0.6",
+    "shx": "^0.4.0",
+    "typescript": "^7.0.2"
+  }
+}
