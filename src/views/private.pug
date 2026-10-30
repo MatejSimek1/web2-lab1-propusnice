@@ -1,0 +1,31 @@
+html
+    head
+        title Propusnice - pregled
+    body
+        h1 Pregled propusnica
+        p Prijavljeni ste kao #{username}
+        if passes.length === 0
+            p Nema propusnica.
+        else
+            table(border="1", cellpadding="6")
+                thead
+                    tr
+                        th Ime
+                        th Dokument
+                        th Izdano
+                        th Status
+                        th Akcije
+                tbody
+                    each pass in passes
+                        tr
+                            td= pass.name
+                            td= pass.document
+                            td= pass.issued_at.toISOString()
+                            td= pass.status
+                            td
+                                if pass.status === 'ACTIVE'
+                                    form(action=`/private/${pass.id}/cancel`, method="post", style="display:inline")
+                                        input(type="submit", value="Poništi")
+                                form(action=`/private/${pass.id}/delete`, method="post", style="display:inline", onsubmit="return confirm('Obrisati propusnicu?')")
+                                    input(type="submit", value="Obriši")
+        p: a(href="/") Početna

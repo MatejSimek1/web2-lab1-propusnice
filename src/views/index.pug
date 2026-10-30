@@ -8,6 +8,7 @@ html
         p Ukupan broj propusnica: #{total}
         p Broj aktivnih propusnica: #{active}
         if username
+            p: a(href="/private") Pregled propusnica
             form(action="/logout", method="post")
                 input(type="submit", value="Odjava")
         else

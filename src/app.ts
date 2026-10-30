@@ -1,9 +1,9 @@
 import express from 'express';
 import path from 'path';
 import dotenv from 'dotenv';
-import { getTotalCount, getActiveCount } from './passes.ts';
+import { getTotalCount, getActiveCount, getAllPasses, cancelPass, deletePass, isUuid } from './passes.ts';
 import oidc from 'express-openid-connect';
-const { auth } = oidc;
+const { auth, requiresAuth } = oidc;
 dotenv.config();
 
 const app = express();
@@ -44,6 +44,32 @@ app.get('/', async function (req, res) {
   }
   res.render('index', {total, active, username});
 });
+
+
+app.get('/private', requiresAuth(), async function (req, res) {
+  const username = req.oidc.user?.name ?? req.oidc.user?.sub;
+  const passes = await getAllPasses();
+  res.render('private', { username, passes });
+});
+
+app.post<{id:string}>('/private/:id/cancel', requiresAuth(), async function (req, res) {
+  const id = req.params.id;
+  if (!isUuid(id) || !(await cancelPass(id))) {
+    res.sendStatus(404);
+    return;
+  }
+  res.redirect('/private');
+});
+
+app.post<{id:string}>('/private/:id/delete', requiresAuth(), async function (req, res) {
+  const id = req.params.id;
+  if (!isUuid(id) || !(await deletePass(id))) {
+    res.sendStatus(404);
+    return;
+  }
+  res.redirect('/private');
+});
+
 
 app.listen(port, '0.0.0.0', () => {
   console.log(`Server running on port ${port}`);
