@@ -3,5 +3,12 @@ html
         title Propusnice 
     body 
         h1 Propusnice
+        if username
+            p Prijavljeni ste kao #{username}
         p Ukupan broj propusnica: #{total}
         p Broj aktivnih propusnica: #{active}
+        if username
+            form(action="/logout", method="post")
+                input(type="submit", value="Odjava")
+        else
+            a(href="/login") Prijava
