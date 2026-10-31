@@ -1,0 +1,10 @@
+html
+    head
+        title Propusnica
+    body
+        h1 Propusnica
+        p Ime: #{pass.name}
+        p Dokument: #{pass.document}
+        p Izdano: #{pass.issued_at.toISOString()}
+        p Status: #{pass.status}
+        p: a(href="/") Početna

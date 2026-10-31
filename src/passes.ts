@@ -44,3 +44,9 @@ export async function deletePass(id: string): Promise<boolean> {
     const result = await pool.query('DELETE FROM passes WHERE id = $1;', [id]);
     return (result.rowCount ?? 0) > 0;
 }
+
+// get single pass; undefined if it does not exist
+export async function getPassById(id: string): Promise<Pass | undefined> {
+    const result = await pool.query('SELECT id, name, document, issued_at, status FROM passes WHERE id = $1;',[id]);
+    return result.rows[0];
+}

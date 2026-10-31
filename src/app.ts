@@ -1,7 +1,7 @@
 import express from 'express';
 import path from 'path';
 import dotenv from 'dotenv';
-import { getTotalCount, getActiveCount, getAllPasses, cancelPass, deletePass, isUuid } from './passes.ts';
+import { getTotalCount, getActiveCount, getAllPasses, cancelPass, deletePass, isUuid, getPassById } from './passes.ts';
 import oidc from 'express-openid-connect';
 const { auth, requiresAuth } = oidc;
 dotenv.config();
@@ -68,6 +68,16 @@ app.post<{id:string}>('/private/:id/delete', requiresAuth(), async function (req
     return;
   }
   res.redirect('/private');
+});
+
+app.get<{id:string}>('/info/:id', async function (req, res) {
+  const id = req.params.id;
+  const pass = isUuid(id) ? await getPassById(id) : undefined;
+  if (!pass) {
+    res.status(404).render('info-not-found');
+    return;
+  }
+  res.render('info', { pass });
 });
 
 
