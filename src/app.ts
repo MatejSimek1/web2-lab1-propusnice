@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import { getTotalCount, getActiveCount, getAllPasses, cancelPass, deletePass, isUuid, getPassById } from './passes.ts';
 import oidc from 'express-openid-connect';
 const { auth, requiresAuth } = oidc;
+import { auth as jwtAuth, requiredScopes } from 'express-oauth2-jwt-bearer';
 dotenv.config();
 
 const app = express();
@@ -17,7 +18,7 @@ const port = Number(process.env.PORT) || 4080;
 const config = {
   authRequired: false,
   idpLogout: true, // odjava i iz aplikacije i s Auth0
-  secret: process.env.SECRET,
+  secret: process.env.SESSION_SECRET,
   baseURL: process.env.BASE_URL,
   clientID: process.env.CLIENT_ID,
   issuerBaseURL: `https://${process.env.AUTH0_DOMAIN}`,
@@ -34,6 +35,11 @@ app.use(auth(config));
 
 // odjava mijenja stanje (briše sesiju), pa ide POST (zaštita od logout CSRF-a - Cross site request forgery)
 app.post('/logout', (req, res) => res.oidc.logout());
+
+const checkJwt = jwtAuth({
+  audience: process.env.API_AUDIENCE,
+  issuerBaseURL: `https://${process.env.AUTH0_DOMAIN}`,
+});
 
 
 app.get('/', async function (req, res) {
@@ -78,6 +84,25 @@ app.get<{id:string}>('/info/:id', async function (req, res) {
     return;
   }
   res.render('info', { pass });
+});
+
+// Provjere:
+// checkJwt - je li token valjan (ili ga nema/istekao je)
+// requiredScopes - provjera ima li traženi scope -> tu dođe ako je valjan i tek onda provjerava scope (inače padne već na checkJwt)
+app.get<{id:string}>('/passes/:id', checkJwt, requiredScopes('read:passes'), async function (req, res) {
+  const id = req.params.id;
+  const pass = isUuid(id) ? await getPassById(id) : undefined;
+  if (!pass) {
+    res.sendStatus(404);
+    return;
+  }
+  res.json({
+    id: pass.id,
+    name: pass.name,
+    document: pass.document,
+    issuedAt: pass.issued_at.toISOString(),
+    status: pass.status,
+  });
 });
 
 
