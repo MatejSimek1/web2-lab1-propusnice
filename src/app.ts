@@ -1,10 +1,11 @@
 import express from 'express';
 import path from 'path';
 import dotenv from 'dotenv';
-import { getTotalCount, getActiveCount, getAllPasses, cancelPass, deletePass, isUuid, getPassById } from './passes.ts';
+import { getTotalCount, getActiveCount, getAllPasses, cancelPass, deletePass, isUuid, getPassById, createPass } from './passes.ts';
 import oidc from 'express-openid-connect';
 const { auth, requiresAuth } = oidc;
 import { auth as jwtAuth, requiredScopes } from 'express-oauth2-jwt-bearer';
+import QRCode from 'qrcode';
 dotenv.config();
 
 const app = express();
@@ -103,6 +104,28 @@ app.get<{id:string}>('/passes/:id', checkJwt, requiredScopes('read:passes'), asy
     issuedAt: pass.issued_at.toISOString(),
     status: pass.status,
   });
+});
+
+// express.json() - middleware koji čita body HTTP zahtjeva i pretvara/parsira ga u JavaScript objekt.
+// body se preko mreže prenosi kao običan String pa mu nebih mogao pristupati sa req.body (dobivao bi uvijek 400)
+// express.json() - na ruti (ne globalno) i dolazi nakon autentifikacije. Tako neovlašteni zahtjev nikad ne stigne do parsiranja tijela
+app.post('/passes', checkJwt, requiredScopes('create:passes'), express.json(), async function (req, res) {
+  const name = req.body?.name;
+  const document = req.body?.document;
+  if (typeof name !== 'string' || typeof document !== 'string' || !name.trim() || !document.trim()) {
+    res.status(400).json({ error: "Both 'name' and 'document' are required and must be non-empty strings." });
+    return;
+  }
+
+  const pass = await createPass(name.trim(), document.trim());
+
+  const baseUrl = process.env.BASE_URL;
+  const qr = await QRCode.toBuffer(`${baseUrl}/info/${pass.id}`, { type: 'png' });
+
+  res.status(201)
+    .location(`${baseUrl}/passes/${pass.id}`)
+    .type('png')
+    .send(qr);
 });
 
 

@@ -50,3 +50,11 @@ export async function getPassById(id: string): Promise<Pass | undefined> {
     const result = await pool.query('SELECT id, name, document, issued_at, status FROM passes WHERE id = $1;',[id]);
     return result.rows[0];
 }
+
+// create a new pass; only name and document are provided; id, issued_at and status are set by the database defaults
+export async function createPass(name: string, document: string): Promise<Pass> {
+    const result = await pool.query(
+        'INSERT INTO passes (name, document) VALUES ($1, $2) RETURNING id, name, document, issued_at, status;', [name, document]
+    );
+    return result.rows[0];
+}
