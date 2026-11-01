@@ -7,4 +7,6 @@ dist/
 # dotenv environment variables file
 .env
 
+# lokalni test za zadatak 2
+src/task2/test-automat.ts
 *.png
